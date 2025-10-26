@@ -1,0 +1,20 @@
+{
+  "name": "my-trading-work",
+  "version": "1.0.0",
+  "description": "Trading workspace with n8n MCP integration",
+  "private": true,
+  "scripts": {
+    "mcp:start": "node -e \"console.log('MCP server ready. Use Claude Code to connect.')\"",
+    "mcp:test": "echo 'Testing MCP configuration...' && node -e \"const config = require('./.mcp/config.json'); console.log('MCP Config loaded:', JSON.stringify(config, null, 2));\""
+  },
+  "keywords": [
+    "trading",
+    "mcp",
+    "n8n",
+    "automation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {},
+  "dependencies": {}
+}
