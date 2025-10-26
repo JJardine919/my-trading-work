@@ -80,7 +80,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "sales@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.email }}",
         "subject": "Welcome! Here's Your Free Guide",
         "emailFormat": "html",
@@ -100,7 +100,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "info@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.email }}",
         "subject": "Thanks for subscribing!",
         "emailFormat": "html",

@@ -106,7 +106,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "orders@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.customer_email }}",
         "subject": "Order Confirmed! Here's What's Next",
         "emailFormat": "html",
@@ -126,7 +126,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "welcome@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.customer_email }}",
         "subject": "Welcome! Here's How to Get Started",
         "emailFormat": "html",

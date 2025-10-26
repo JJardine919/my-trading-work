@@ -64,7 +64,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "info@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.Email }}",
         "subject": "The #1 Mistake People Make",
         "emailFormat": "html",
@@ -84,7 +84,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "info@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.Email }}",
         "subject": "How [Solution] Can Help You",
         "emailFormat": "html",
@@ -104,7 +104,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "info@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.Email }}",
         "subject": "Real Results: [Customer] Story",
         "emailFormat": "html",
@@ -124,7 +124,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "sales@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.Email }}",
         "subject": "20% Off - Limited Time",
         "emailFormat": "html",
@@ -144,7 +144,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "sales@yourdomain.com",
+        "fromEmail": "jimj@sustai.io",
         "toEmail": "={{ $json.Email }}",
         "subject": "⏰ Last Chance: Your 20% Discount Expires Tonight",
         "emailFormat": "html",
