@@ -1,0 +1,268 @@
+{
+  "name": "Payment Processing & Sales Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-stripe",
+      "name": "Stripe Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.type }}",
+              "operation": "equals",
+              "value2": "checkout.session.completed"
+            }
+          ]
+        }
+      },
+      "id": "if-event-type",
+      "name": "Check Event Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract payment and customer info from Stripe webhook\nconst event = $input.item.json.body;\nconst session = event.data.object;\n\n// Extract customer data\nconst customerEmail = session.customer_details?.email || session.customer_email;\nconst customerName = session.customer_details?.name || '';\nconst amountTotal = session.amount_total / 100; // Convert from cents\nconst currency = session.currency.toUpperCase();\n\nreturn {\n  json: {\n    order_id: `ORD-${Date.now()}`,\n    stripe_session_id: session.id,\n    stripe_payment_intent: session.payment_intent,\n    customer_email: customerEmail,\n    customer_name: customerName,\n    amount: amountTotal,\n    currency: currency,\n    product: session.line_items?.data?.[0]?.description || 'Product',\n    status: 'paid',\n    created_at: new Date().toISOString(),\n    metadata: session.metadata || {}\n  }\n};"
+      },
+      "id": "function-extract",
+      "name": "Extract Order Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "application": "appXXXXXXX",
+        "table": "Orders",
+        "options": {},
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order ID": "={{ $json.order_id }}",
+            "Stripe Session ID": "={{ $json.stripe_session_id }}",
+            "Customer Email": "={{ $json.customer_email }}",
+            "Customer Name": "={{ $json.customer_name }}",
+            "Amount": "={{ $json.amount }}",
+            "Currency": "={{ $json.currency }}",
+            "Product": "={{ $json.product }}",
+            "Status": "={{ $json.status }}",
+            "Created At": "={{ $json.created_at }}"
+          }
+        }
+      },
+      "id": "airtable-order",
+      "name": "Save Order to Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "application": "appXXXXXXX",
+        "table": "Leads",
+        "options": {
+          "filterByFormula": "{Email} = '{{ $json.customer_email }}'"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "customer",
+            "Lifetime Value": "={{ $json.amount }}",
+            "Last Purchase": "={{ $json.created_at }}"
+          }
+        }
+      },
+      "id": "airtable-update-lead",
+      "name": "Update Lead to Customer",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1050, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "orders@yourdomain.com",
+        "toEmail": "={{ $json.customer_email }}",
+        "subject": "Order Confirmed! Here's What's Next",
+        "emailFormat": "html",
+        "text": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: #0066ff; color: white; padding: 24px; text-align: center;\">\n    <h1 style=\"margin: 0;\">✅ Order Confirmed!</h1>\n  </div>\n  \n  <div style=\"padding: 24px; background: #f9f9f9;\">\n    <h2>Hi {{ $json.customer_name }},</h2>\n    \n    <p>Thank you for your purchase! Your order has been confirmed and we're excited to get started.</p>\n    \n    <div style=\"background: white; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n      <h3 style=\"margin-top: 0;\">Order Details</h3>\n      <table style=\"width: 100%; border-collapse: collapse;\">\n        <tr>\n          <td style=\"padding: 8px 0; border-bottom: 1px solid #eee;\"><strong>Order ID:</strong></td>\n          <td style=\"padding: 8px 0; border-bottom: 1px solid #eee; text-align: right;\">{{ $json.order_id }}</td>\n        </tr>\n        <tr>\n          <td style=\"padding: 8px 0; border-bottom: 1px solid #eee;\"><strong>Product:</strong></td>\n          <td style=\"padding: 8px 0; border-bottom: 1px solid #eee; text-align: right;\">{{ $json.product }}</td>\n        </tr>\n        <tr>\n          <td style=\"padding: 8px 0;\"><strong>Amount:</strong></td>\n          <td style=\"padding: 8px 0; text-align: right; font-size: 18px; color: #0066ff;\"><strong>{{ $json.currency }} ${{ $json.amount }}</strong></td>\n        </tr>\n      </table>\n    </div>\n    \n    <h3>What Happens Next?</h3>\n    <ol>\n      <li><strong>Access Your Purchase:</strong> <a href=\"https://yourdomain.com/dashboard\">Login to your dashboard</a></li>\n      <li><strong>Onboarding:</strong> You'll receive a welcome email with setup instructions</li>\n      <li><strong>Support:</strong> Our team is here if you need anything - just reply to this email</li>\n    </ol>\n    \n    <div style=\"background: #e8f4ff; padding: 16px; border-radius: 8px; margin: 20px 0;\">\n      <p style=\"margin: 0;\"><strong>🎁 Bonus:</strong> Check your email for exclusive resources and tips to get the most out of your purchase!</p>\n    </div>\n    \n    <p style=\"text-align: center; margin-top: 32px;\">\n      <a href=\"https://yourdomain.com/dashboard\" style=\"background: #0066ff; color: white; padding: 14px 28px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;\">Go to Dashboard</a>\n    </p>\n    \n    <p>Thanks for choosing us!</p>\n    <p>The Team</p>\n  </div>\n  \n  <div style=\"padding: 16px; text-align: center; color: #666; font-size: 12px;\">\n    <p>Questions? Contact us at support@yourdomain.com</p>\n  </div>\n</div>"
+      },
+      "id": "email-confirmation",
+      "name": "Send Order Confirmation",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [1250, 200],
+      "credentials": {
+        "sendGridApi": {
+          "id": "2",
+          "name": "SendGrid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "welcome@yourdomain.com",
+        "toEmail": "={{ $json.customer_email }}",
+        "subject": "Welcome! Here's How to Get Started",
+        "emailFormat": "html",
+        "text": "=<h1>Welcome to [Your Product], {{ $json.customer_name }}!</h1>\n\n<p>We're thrilled to have you on board. Let's get you set up for success.</p>\n\n<h2>🚀 Quick Start Guide</h2>\n\n<h3>Step 1: Access Your Account</h3>\n<p><a href=\"https://yourdomain.com/dashboard?email={{ $json.customer_email }}\">Click here to access your dashboard</a></p>\n<p>Use the email: {{ $json.customer_email }}</p>\n\n<h3>Step 2: Complete Setup</h3>\n<ul>\n  <li>Configure your preferences</li>\n  <li>Connect your tools</li>\n  <li>Import your data</li>\n</ul>\n\n<h3>Step 3: Watch Tutorial</h3>\n<p><a href=\"https://yourdomain.com/tutorial\">Watch our 5-minute setup tutorial</a></p>\n\n<h2>📚 Resources</h2>\n<ul>\n  <li><a href=\"https://yourdomain.com/docs\">Documentation</a></li>\n  <li><a href=\"https://yourdomain.com/examples\">Examples & Templates</a></li>\n  <li><a href=\"https://yourdomain.com/community\">Community Forum</a></li>\n</ul>\n\n<h2>💬 Need Help?</h2>\n<p>Our support team is here for you:</p>\n<ul>\n  <li>Email: support@yourdomain.com</li>\n  <li>Live Chat: Available in your dashboard</li>\n  <li>Response time: Usually within 2 hours</li>\n</ul>\n\n<p>Let's make this amazing!</p>\n<p>The Team</p>"
+      },
+      "id": "email-onboarding",
+      "name": "Send Onboarding Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [1450, 200],
+      "credentials": {
+        "sendGridApi": {
+          "id": "2",
+          "name": "SendGrid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#sales",
+        "text": "=💰 NEW SALE! 🎉\n\n*Customer:* {{ $json.customer_name }}\n*Email:* {{ $json.customer_email }}\n*Amount:* {{ $json.currency }} ${{ $json.amount }}\n*Product:* {{ $json.product }}\n*Order ID:* {{ $json.order_id }}\n\nGreat work team! 🚀",
+        "otherOptions": {}
+      },
+      "id": "slack-sale",
+      "name": "Notify Team of Sale",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1250, 400],
+      "credentials": {
+        "slackApi": {
+          "id": "3",
+          "name": "Slack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Trigger fulfillment based on product type\nconst order = $input.item.json;\nconst metadata = order.metadata || {};\n\nconst fulfillment = {\n  order_id: order.order_id,\n  customer_email: order.customer_email,\n  product: order.product,\n  actions: []\n};\n\n// Add fulfillment actions based on product\nif (order.product.toLowerCase().includes('digital')) {\n  fulfillment.actions.push('send_download_link');\n  fulfillment.download_url = 'https://yourdomain.com/downloads/' + order.order_id;\n}\n\nif (order.product.toLowerCase().includes('course')) {\n  fulfillment.actions.push('grant_course_access');\n  fulfillment.course_id = metadata.course_id || 'default-course';\n}\n\nif (order.product.toLowerCase().includes('subscription')) {\n  fulfillment.actions.push('activate_subscription');\n  fulfillment.subscription_tier = metadata.tier || 'basic';\n}\n\nfulfillment.actions.push('add_to_customer_portal');\n\nreturn { json: fulfillment };"
+      },
+      "id": "function-fulfillment",
+      "name": "Determine Fulfillment Actions",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://yourdomain.com/api/fulfillment",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "order_id",
+              "value": "={{ $json.order_id }}"
+            },
+            {
+              "name": "customer_email",
+              "value": "={{ $json.customer_email }}"
+            },
+            {
+              "name": "actions",
+              "value": "={{ JSON.stringify($json.actions) }}"
+            }
+          ]
+        }
+      },
+      "id": "http-fulfillment",
+      "name": "Trigger Fulfillment API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 500],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4",
+          "name": "API Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"received\": true } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Stripe",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    }
+  ],
+  "connections": {
+    "Stripe Webhook": {
+      "main": [[{"node": "Check Event Type", "type": "main", "index": 0}]]
+    },
+    "Check Event Type": {
+      "main": [[{"node": "Extract Order Data", "type": "main", "index": 0}]]
+    },
+    "Extract Order Data": {
+      "main": [[{"node": "Save Order to Airtable", "type": "main", "index": 0}]]
+    },
+    "Save Order to Airtable": {
+      "main": [[{"node": "Update Lead to Customer", "type": "main", "index": 0}]]
+    },
+    "Update Lead to Customer": {
+      "main": [
+        [
+          {"node": "Send Order Confirmation", "type": "main", "index": 0},
+          {"node": "Determine Fulfillment Actions", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Send Order Confirmation": {
+      "main": [[{"node": "Send Onboarding Email", "type": "main", "index": 0}]]
+    },
+    "Send Onboarding Email": {
+      "main": [[{"node": "Respond to Stripe", "type": "main", "index": 0}]]
+    },
+    "Determine Fulfillment Actions": {
+      "main": [
+        [
+          {"node": "Notify Team of Sale", "type": "main", "index": 0},
+          {"node": "Trigger Fulfillment API", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Notify Team of Sale": {
+      "main": [[{"node": "Respond to Stripe", "type": "main", "index": 0}]]
+    },
+    "Trigger Fulfillment API": {
+      "main": [[{"node": "Respond to Stripe", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

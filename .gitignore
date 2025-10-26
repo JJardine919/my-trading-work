@@ -1,0 +1,97 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# N8N data
+n8n_data/
+.n8n/
+
+# Docker volumes
+postgres_data/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.sql
+*.sqlite
+*.db
+
+# API Keys and Secrets
+**/secrets/
+**/credentials/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# Trading data (if sensitive)
+data/*.csv
+data/*.json
+data/*.xlsx
+
+# Analysis outputs (if sensitive)
+analysis/output/
+analysis/results/
+
+# Docker
+docker-compose.override.yml
+
+# Compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip

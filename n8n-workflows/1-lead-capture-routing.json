@@ -1,0 +1,180 @@
+{
+  "name": "Lead Capture & Routing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-capture",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook - Lead Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract and validate lead data\nconst leadData = $input.item.json;\n\n// Calculate lead score based on source and data quality\nlet score = 0;\n\n// Source scoring\nif (leadData.source === 'paid-ad') score += 30;\nelse if (leadData.source === 'organic') score += 20;\nelse if (leadData.source === 'referral') score += 40;\n\n// Data quality scoring\nif (leadData.email) score += 20;\nif (leadData.phone) score += 15;\nif (leadData.company) score += 15;\nif (leadData.budget && parseInt(leadData.budget) > 1000) score += 20;\n\n// Enrich data\nconst enrichedLead = {\n  ...leadData,\n  lead_score: score,\n  status: score > 60 ? 'hot' : score > 40 ? 'warm' : 'cold',\n  created_at: new Date().toISOString(),\n  last_contact: new Date().toISOString(),\n  id: `LEAD-${Date.now()}`\n};\n\nreturn { json: enrichedLead };"
+      },
+      "id": "function-1",
+      "name": "Score & Enrich Lead",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "application": "{{ $json.id }}",
+        "table": "Leads",
+        "options": {
+          "typecast": true
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Lead ID": "={{ $json.id }}",
+            "Email": "={{ $json.email }}",
+            "Name": "={{ $json.name }}",
+            "Phone": "={{ $json.phone }}",
+            "Company": "={{ $json.company }}",
+            "Source": "={{ $json.source }}",
+            "Lead Score": "={{ $json.lead_score }}",
+            "Status": "={{ $json.status }}",
+            "Created At": "={{ $json.created_at }}",
+            "Last Contact": "={{ $json.last_contact }}"
+          }
+        }
+      },
+      "id": "airtable-1",
+      "name": "Save to Airtable CRM",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equals",
+              "value2": "hot"
+            }
+          ]
+        }
+      },
+      "id": "if-1",
+      "name": "Route by Lead Score",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "sales@yourdomain.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Welcome! Here's Your Free Guide",
+        "emailFormat": "html",
+        "text": "=<h1>Welcome {{ $json.name }}!</h1>\n<p>Thanks for your interest. We're excited to help you achieve your goals.</p>\n<p>As promised, here's your free guide: <a href=\"https://yourdomain.com/guide.pdf\">Download Now</a></p>\n<p>Over the next few days, I'll share some valuable insights on how to [solve their problem].</p>\n<p>Looking forward to helping you succeed!</p>\n<p>Best,<br>Your Sales Team</p>"
+      },
+      "id": "sendgrid-hot",
+      "name": "Send Hot Lead Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "credentials": {
+        "sendGridApi": {
+          "id": "2",
+          "name": "SendGrid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "info@yourdomain.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Thanks for subscribing!",
+        "emailFormat": "html",
+        "text": "=<h1>Hi {{ $json.name }},</h1>\n<p>Thanks for joining our community!</p>\n<p>Here's your free resource: <a href=\"https://yourdomain.com/resource.pdf\">Download</a></p>\n<p>Stay tuned for more valuable content.</p>\n<p>Cheers,<br>The Team</p>"
+      },
+      "id": "sendgrid-cold",
+      "name": "Send Standard Welcome",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "credentials": {
+        "sendGridApi": {
+          "id": "2",
+          "name": "SendGrid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#sales-notifications",
+        "text": "=🔥 New {{ $json.status }} lead!\n*{{ $json.name }}* (Score: {{ $json.lead_score }})\nEmail: {{ $json.email }}\nSource: {{ $json.source }}",
+        "otherOptions": {}
+      },
+      "id": "slack-1",
+      "name": "Notify Team on Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": {
+        "slackApi": {
+          "id": "3",
+          "name": "Slack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"lead_id\": $json.id, \"message\": \"Lead captured successfully\" } }}"
+      },
+      "id": "respond-1",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Lead Form": {
+      "main": [[{"node": "Score & Enrich Lead", "type": "main", "index": 0}]]
+    },
+    "Score & Enrich Lead": {
+      "main": [[{"node": "Save to Airtable CRM", "type": "main", "index": 0}]]
+    },
+    "Save to Airtable CRM": {
+      "main": [[{"node": "Route by Lead Score", "type": "main", "index": 0}]]
+    },
+    "Route by Lead Score": {
+      "main": [
+        [{"node": "Send Hot Lead Email", "type": "main", "index": 0}],
+        [{"node": "Send Standard Welcome", "type": "main", "index": 0}]
+      ]
+    },
+    "Send Hot Lead Email": {
+      "main": [[{"node": "Notify Team on Slack", "type": "main", "index": 0}]]
+    },
+    "Send Standard Welcome": {
+      "main": [[{"node": "Notify Team on Slack", "type": "main", "index": 0}]]
+    },
+    "Notify Team on Slack": {
+      "main": [[{"node": "Respond to Webhook", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

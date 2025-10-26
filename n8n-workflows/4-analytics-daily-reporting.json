@@ -1,0 +1,198 @@
+{
+  "name": "Analytics & Daily Reporting",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "cronExpression", "expression": "0 9 * * *"}]
+        }
+      },
+      "id": "cron-daily",
+      "name": "Run Daily at 9 AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "application": "appXXXXXXX",
+        "table": "Leads",
+        "options": {
+          "filterByFormula": "AND(DATEADD(NOW(), -1, 'days') <= {Created At}, {Created At} <= NOW())"
+        }
+      },
+      "id": "airtable-leads-today",
+      "name": "Get Today's Leads",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [450, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "application": "appXXXXXXX",
+        "table": "Orders",
+        "options": {
+          "filterByFormula": "AND(DATEADD(NOW(), -1, 'days') <= {Created At}, {Created At} <= NOW())"
+        }
+      },
+      "id": "airtable-orders-today",
+      "name": "Get Today's Orders",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "application": "appXXXXXXX",
+        "table": "Leads",
+        "options": {}
+      },
+      "id": "airtable-all-leads",
+      "name": "Get All Leads",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [450, 400],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aggregate data from all inputs\nconst todayLeads = $input.first().json;\nconst todayOrders = $input.all()[1]?.json || [];\nconst allLeads = $input.all()[2]?.json || [];\n\n// Calculate metrics\nconst totalLeads = allLeads.length;\nconst todayLeadsCount = Array.isArray(todayLeads) ? todayLeads.length : 0;\nconst todayOrdersCount = Array.isArray(todayOrders) ? todayOrders.length : 0;\n\n// Calculate revenue\nconst todayRevenue = todayOrders.reduce((sum, order) => {\n  return sum + (parseFloat(order.Amount) || 0);\n}, 0);\n\n// Lead source breakdown for today\nconst leadsBySource = {};\nif (Array.isArray(todayLeads)) {\n  todayLeads.forEach(lead => {\n    const source = lead.Source || 'unknown';\n    leadsBySource[source] = (leadsBySource[source] || 0) + 1;\n  });\n}\n\n// Lead status breakdown\nconst leadsByStatus = {\n  hot: 0,\n  warm: 0,\n  cold: 0,\n  customer: 0\n};\n\nif (Array.isArray(allLeads)) {\n  allLeads.forEach(lead => {\n    const status = lead.Status?.toLowerCase() || 'cold';\n    if (leadsByStatus.hasOwnProperty(status)) {\n      leadsByStatus[status]++;\n    }\n  });\n}\n\n// Calculate conversion rate\nconst conversionRate = totalLeads > 0 \n  ? ((leadsByStatus.customer / totalLeads) * 100).toFixed(2)\n  : 0;\n\n// Average order value\nconst avgOrderValue = todayOrdersCount > 0\n  ? (todayRevenue / todayOrdersCount).toFixed(2)\n  : 0;\n\nreturn {\n  json: {\n    date: new Date().toISOString().split('T')[0],\n    metrics: {\n      total_leads: totalLeads,\n      today_leads: todayLeadsCount,\n      today_orders: todayOrdersCount,\n      today_revenue: todayRevenue.toFixed(2),\n      avg_order_value: avgOrderValue,\n      conversion_rate: conversionRate\n    },\n    leadsBySource,\n    leadsByStatus,\n    topSources: Object.entries(leadsBySource)\n      .sort((a, b) => b[1] - a[1])\n      .slice(0, 3)\n      .map(([source, count]) => `${source}: ${count}`)\n      .join(', ')\n  }\n};"
+      },
+      "id": "function-aggregate",
+      "name": "Calculate Metrics",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "sheetId": "YOUR_GOOGLE_SHEET_ID",
+        "range": "Dashboard!A:Z",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        },
+        "values": "={{ [[\n  $json.date,\n  $json.metrics.total_leads,\n  $json.metrics.today_leads,\n  $json.metrics.today_orders,\n  $json.metrics.today_revenue,\n  $json.metrics.avg_order_value,\n  $json.metrics.conversion_rate,\n  $json.topSources\n]] }}"
+      },
+      "id": "google-sheets",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [850, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#daily-reports",
+        "text": "=📊 *Daily Sales Report* - {{ $json.date }}\n\n*Today's Performance:*\n• 👥 New Leads: {{ $json.metrics.today_leads }}\n• 💰 Sales: {{ $json.metrics.today_orders }}\n• 💵 Revenue: ${{ $json.metrics.today_revenue }}\n• 📈 Avg Order: ${{ $json.metrics.avg_order_value }}\n\n*Overall Stats:*\n• 📊 Total Leads: {{ $json.metrics.total_leads }}\n• 🎯 Conversion Rate: {{ $json.metrics.conversion_rate }}%\n• 🔥 Hot Leads: {{ $json.leadsByStatus.hot }}\n• ⚡ Warm Leads: {{ $json.leadsByStatus.warm }}\n• 👥 Customers: {{ $json.leadsByStatus.customer }}\n\n*Top Lead Sources:*\n{{ $json.topSources }}\n\n{{ $json.metrics.today_orders > 0 ? '🎉 Great day! Keep it up!' : '💪 Let\\'s crush it today!' }}",
+        "otherOptions": {}
+      },
+      "id": "slack-report",
+      "name": "Send Daily Report to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "slackApi": {
+          "id": "3",
+          "name": "Slack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.metrics.today_leads }}",
+              "operation": "largerEqual",
+              "value2": 10
+            }
+          ]
+        }
+      },
+      "id": "if-milestone",
+      "name": "Check for Milestones",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#sales",
+        "text": "=🎉 *MILESTONE ALERT!* 🎉\n\nWe hit {{ $json.metrics.today_leads }} leads today!\n\n{{ $json.metrics.today_orders > 5 ? 'AND ' + $json.metrics.today_orders + ' sales! Amazing work team! 🚀' : 'Keep closing those deals! 💪' }}",
+        "otherOptions": {}
+      },
+      "id": "slack-milestone",
+      "name": "Celebrate Milestone",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1450, 200],
+      "credentials": {
+        "slackApi": {
+          "id": "3",
+          "name": "Slack"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Run Daily at 9 AM": {
+      "main": [
+        [
+          {"node": "Get Today's Leads", "type": "main", "index": 0},
+          {"node": "Get Today's Orders", "type": "main", "index": 0},
+          {"node": "Get All Leads", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Get Today's Leads": {
+      "main": [[{"node": "Calculate Metrics", "type": "main", "index": 0}]]
+    },
+    "Get Today's Orders": {
+      "main": [[{"node": "Calculate Metrics", "type": "main", "index": 0}]]
+    },
+    "Get All Leads": {
+      "main": [[{"node": "Calculate Metrics", "type": "main", "index": 0}]]
+    },
+    "Calculate Metrics": {
+      "main": [[{"node": "Log to Google Sheets", "type": "main", "index": 0}]]
+    },
+    "Log to Google Sheets": {
+      "main": [[{"node": "Send Daily Report to Slack", "type": "main", "index": 0}]]
+    },
+    "Send Daily Report to Slack": {
+      "main": [[{"node": "Check for Milestones", "type": "main", "index": 0}]]
+    },
+    "Check for Milestones": {
+      "main": [[{"node": "Celebrate Milestone", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
