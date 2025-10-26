@@ -45,7 +45,7 @@
     {
       "parameters": {
         "operation": "append",
-        "application": "appXXXXXXX",
+        "application": "appo2WYJx3vIXaEcw",
         "table": "Orders",
         "options": {},
         "columns": {
@@ -78,7 +78,7 @@
     {
       "parameters": {
         "operation": "update",
-        "application": "appXXXXXXX",
+        "application": "appo2WYJx3vIXaEcw",
         "table": "Leads",
         "options": {
           "filterByFormula": "{Email} = '{{ $json.customer_email }}'"

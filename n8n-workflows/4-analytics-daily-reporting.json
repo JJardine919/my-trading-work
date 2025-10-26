@@ -16,7 +16,7 @@
     {
       "parameters": {
         "operation": "list",
-        "application": "appXXXXXXX",
+        "application": "appo2WYJx3vIXaEcw",
         "table": "Leads",
         "options": {
           "filterByFormula": "AND(DATEADD(NOW(), -1, 'days') <= {Created At}, {Created At} <= NOW())"
@@ -37,7 +37,7 @@
     {
       "parameters": {
         "operation": "list",
-        "application": "appXXXXXXX",
+        "application": "appo2WYJx3vIXaEcw",
         "table": "Orders",
         "options": {
           "filterByFormula": "AND(DATEADD(NOW(), -1, 'days') <= {Created At}, {Created At} <= NOW())"
@@ -58,7 +58,7 @@
     {
       "parameters": {
         "operation": "list",
-        "application": "appXXXXXXX",
+        "application": "appo2WYJx3vIXaEcw",
         "table": "Leads",
         "options": {}
       },

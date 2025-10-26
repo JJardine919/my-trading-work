@@ -27,7 +27,7 @@
     {
       "parameters": {
         "operation": "append",
-        "application": "{{ $json.id }}",
+        "application": "appo2WYJx3vIXaEcw",
         "table": "Leads",
         "options": {
           "typecast": true

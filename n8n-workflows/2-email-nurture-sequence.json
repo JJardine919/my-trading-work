@@ -16,7 +16,7 @@
     {
       "parameters": {
         "operation": "list",
-        "application": "appXXXXXXX",
+        "application": "appo2WYJx3vIXaEcw",
         "table": "Leads",
         "options": {
           "filterByFormula": "AND({Status} != 'customer', {Status} != 'unsubscribed', {Last Contact} < DATEADD(NOW(), -2, 'days'))"
@@ -165,7 +165,7 @@
     {
       "parameters": {
         "operation": "update",
-        "application": "appXXXXXXX",
+        "application": "appo2WYJx3vIXaEcw",
         "table": "Leads",
         "id": "={{ $json['Lead ID'] }}",
         "options": {},
