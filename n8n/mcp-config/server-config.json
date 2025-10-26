@@ -1,0 +1,126 @@
+{
+  "mcpServers": {
+    "trading-analytics": {
+      "command": "node",
+      "args": ["server.js"],
+      "env": {
+        "MCP_SERVER_PORT": "3000",
+        "MCP_SERVER_NAME": "trading-analytics"
+      },
+      "tools": [
+        {
+          "name": "analyze_market_data",
+          "description": "Analyze market data and return insights",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "description": "Trading symbol (e.g., BTCUSD)"
+              },
+              "timeframe": {
+                "type": "string",
+                "description": "Timeframe for analysis (e.g., 1h, 4h, 1d)"
+              },
+              "indicators": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of technical indicators to apply"
+              }
+            },
+            "required": ["symbol", "timeframe"]
+          }
+        },
+        {
+          "name": "execute_trade",
+          "description": "Execute a trading order",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "symbol": {
+                "type": "string",
+                "description": "Trading symbol"
+              },
+              "side": {
+                "type": "string",
+                "enum": ["buy", "sell"],
+                "description": "Order side"
+              },
+              "quantity": {
+                "type": "number",
+                "description": "Order quantity"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["market", "limit"],
+                "description": "Order type"
+              },
+              "price": {
+                "type": "number",
+                "description": "Limit price (required for limit orders)"
+              }
+            },
+            "required": ["symbol", "side", "quantity", "type"]
+          }
+        },
+        {
+          "name": "get_portfolio_status",
+          "description": "Get current portfolio status and positions",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "include_history": {
+                "type": "boolean",
+                "description": "Include historical performance data"
+              }
+            }
+          }
+        },
+        {
+          "name": "set_risk_parameters",
+          "description": "Set risk management parameters",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "max_position_size": {
+                "type": "number",
+                "description": "Maximum position size as percentage of portfolio"
+              },
+              "stop_loss_percentage": {
+                "type": "number",
+                "description": "Stop loss percentage"
+              },
+              "take_profit_percentage": {
+                "type": "number",
+                "description": "Take profit percentage"
+              }
+            }
+          }
+        }
+      ],
+      "resources": [
+        {
+          "uri": "market://data/historical",
+          "name": "Historical Market Data",
+          "description": "Access to historical market data"
+        },
+        {
+          "uri": "market://data/realtime",
+          "name": "Real-time Market Data",
+          "description": "Access to real-time market data streams"
+        }
+      ]
+    }
+  },
+  "authentication": {
+    "type": "bearer",
+    "token": "${MCP_BEARER_TOKEN}"
+  },
+  "settings": {
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "logLevel": "info"
+  }
+}

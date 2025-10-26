@@ -1,0 +1,20 @@
+# Environment files with secrets
+.env
+
+# n8n data directory
+data/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+.DS_Store
+
+# Database files
+*.db
+*.sqlite
+
+# Docker volumes
+postgres-data/

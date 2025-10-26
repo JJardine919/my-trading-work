@@ -1,0 +1,26 @@
+{
+  "mcpClients": {
+    "external-ai-service": {
+      "serverUrl": "http://localhost:3001/mcp",
+      "authentication": {
+        "type": "bearer",
+        "token": "${EXTERNAL_MCP_TOKEN}"
+      },
+      "description": "External AI service for advanced analytics"
+    },
+    "market-data-provider": {
+      "serverUrl": "https://api.marketdata.example.com/mcp",
+      "authentication": {
+        "type": "bearer",
+        "token": "${MARKET_DATA_API_KEY}"
+      },
+      "description": "Market data provider MCP endpoint"
+    }
+  },
+  "settings": {
+    "connectionTimeout": 10000,
+    "requestTimeout": 30000,
+    "maxRetries": 3,
+    "retryDelay": 1000
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "name": "Market Analysis with MCP",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "mcp-server-trigger",
+      "name": "MCP Server Trigger",
+      "type": "n8n-nodes-base.mcpServerTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "market-analysis"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.params.dataSource }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "symbol",
+                "value": "={{ $json.params.symbol }}"
+              },
+              {
+                "name": "timeframe",
+                "value": "={{ $json.params.timeframe }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "fetch-market-data",
+      "name": "Fetch Market Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Apply technical indicators\nconst data = $input.all();\nconst symbol = data[0].json.params.symbol;\nconst indicators = data[0].json.params.indicators || ['sma', 'rsi'];\n\n// Simulated analysis - replace with actual calculations\nconst analysis = {\n  symbol: symbol,\n  timestamp: new Date().toISOString(),\n  indicators: {},\n  signals: []\n};\n\n// Calculate indicators\nif (indicators.includes('sma')) {\n  analysis.indicators.sma = {\n    sma20: 45000,\n    sma50: 44500,\n    sma200: 43000\n  };\n  if (analysis.indicators.sma.sma20 > analysis.indicators.sma.sma50) {\n    analysis.signals.push({ type: 'bullish', indicator: 'SMA', strength: 'medium' });\n  }\n}\n\nif (indicators.includes('rsi')) {\n  analysis.indicators.rsi = {\n    value: 65,\n    period: 14\n  };\n  if (analysis.indicators.rsi.value > 70) {\n    analysis.signals.push({ type: 'overbought', indicator: 'RSI', strength: 'high' });\n  } else if (analysis.indicators.rsi.value < 30) {\n    analysis.signals.push({ type: 'oversold', indicator: 'RSI', strength: 'high' });\n  }\n}\n\nif (indicators.includes('macd')) {\n  analysis.indicators.macd = {\n    macd: 120,\n    signal: 100,\n    histogram: 20\n  };\n  if (analysis.indicators.macd.macd > analysis.indicators.macd.signal) {\n    analysis.signals.push({ type: 'bullish', indicator: 'MACD', strength: 'medium' });\n  }\n}\n\n// Overall recommendation\nconst bullishSignals = analysis.signals.filter(s => s.type === 'bullish').length;\nconst bearishSignals = analysis.signals.filter(s => s.type === 'bearish').length;\n\nif (bullishSignals > bearishSignals) {\n  analysis.recommendation = 'BUY';\n  analysis.confidence = bullishSignals / analysis.signals.length;\n} else if (bearishSignals > bullishSignals) {\n  analysis.recommendation = 'SELL';\n  analysis.confidence = bearishSignals / analysis.signals.length;\n} else {\n  analysis.recommendation = 'HOLD';\n  analysis.confidence = 0.5;\n}\n\nreturn [{ json: analysis }];"
+      },
+      "id": "analyze-data",
+      "name": "Analyze Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "content": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {
+          "contentType": "application/json"
+        }
+      },
+      "id": "mcp-response",
+      "name": "MCP Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [910, 300]
+    }
+  ],
+  "connections": {
+    "MCP Server Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Market Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Market Data": {
+      "main": [
+        [
+          {
+            "node": "Analyze Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Data": {
+      "main": [
+        [
+          {
+            "node": "MCP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "trading",
+      "id": "1"
+    },
+    {
+      "name": "mcp",
+      "id": "2"
+    }
+  ],
+  "meta": {
+    "instanceId": "trading-instance"
+  }
+}

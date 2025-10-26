@@ -1,0 +1,222 @@
+{
+  "name": "Risk Management with MCP",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "risk-management"
+    },
+    {
+      "parameters": {
+        "server": "trading-analytics",
+        "tool": "get_portfolio_status",
+        "parameters": {
+          "include_history": true
+        }
+      },
+      "id": "get-portfolio",
+      "name": "Get Portfolio",
+      "type": "n8n-nodes-langchain.toolMcp",
+      "typeVersion": 1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate risk metrics\nconst portfolio = $json;\nconst totalValue = portfolio.total_value || 0;\nconst positions = portfolio.positions || [];\n\n// Calculate portfolio metrics\nlet totalExposure = 0;\nlet largestPosition = 0;\nlet riskMetrics = {\n  total_value: totalValue,\n  positions_count: positions.length,\n  risk_assessment: {},\n  warnings: [],\n  recommendations: []\n};\n\npositions.forEach(position => {\n  const positionValue = position.quantity * position.current_price;\n  const positionPercent = (positionValue / totalValue) * 100;\n  \n  totalExposure += positionValue;\n  \n  if (positionPercent > largestPosition) {\n    largestPosition = positionPercent;\n  }\n  \n  // Check for over-concentration\n  if (positionPercent > 30) {\n    riskMetrics.warnings.push({\n      type: 'concentration',\n      symbol: position.symbol,\n      message: `Position ${position.symbol} is ${positionPercent.toFixed(2)}% of portfolio - exceeds 30% threshold`,\n      severity: 'high'\n    });\n    riskMetrics.recommendations.push({\n      action: 'reduce_position',\n      symbol: position.symbol,\n      target_percent: 25,\n      reason: 'Reduce concentration risk'\n    });\n  }\n  \n  // Check for unrealized losses\n  if (position.unrealized_pnl_percent < -10) {\n    riskMetrics.warnings.push({\n      type: 'unrealized_loss',\n      symbol: position.symbol,\n      message: `Position ${position.symbol} has unrealized loss of ${position.unrealized_pnl_percent.toFixed(2)}%`,\n      severity: 'medium'\n    });\n    riskMetrics.recommendations.push({\n      action: 'review_stop_loss',\n      symbol: position.symbol,\n      reason: 'Consider adjusting stop loss'\n    });\n  }\n});\n\nriskMetrics.risk_assessment = {\n  total_exposure_percent: (totalExposure / totalValue) * 100,\n  largest_position_percent: largestPosition,\n  diversification_score: Math.max(0, 100 - (largestPosition * 2)),\n  overall_risk: largestPosition > 40 ? 'high' : largestPosition > 25 ? 'medium' : 'low'\n};\n\nreturn [{ json: riskMetrics }];"
+      },
+      "id": "calculate-risk",
+      "name": "Calculate Risk Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "high-risk-check",
+              "leftValue": "={{ $json.risk_assessment.overall_risk }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "check-risk-level",
+      "name": "Check Risk Level",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "server": "trading-analytics",
+        "tool": "set_risk_parameters",
+        "parameters": {
+          "max_position_size": 20,
+          "stop_loss_percentage": 5,
+          "take_profit_percentage": 15
+        }
+      },
+      "id": "adjust-risk-params",
+      "name": "Adjust Risk Parameters",
+      "type": "n8n-nodes-langchain.toolMcp",
+      "typeVersion": 1,
+      "position": [1130, 200]
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "url": "https://alerts.example.com/notify",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "alert_type",
+              "value": "high_risk"
+            },
+            {
+              "name": "severity",
+              "value": "high"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "metrics",
+              "value": "={{ JSON.stringify($json.risk_assessment) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1130, 400]
+    },
+    {
+      "parameters": {
+        "content": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {
+          "contentType": "application/json"
+        }
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1350, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Portfolio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Portfolio": {
+      "main": [
+        [
+          {
+            "node": "Calculate Risk Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Risk Metrics": {
+      "main": [
+        [
+          {
+            "node": "Check Risk Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Risk Level": {
+      "main": [
+        [
+          {
+            "node": "Adjust Risk Parameters",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adjust Risk Parameters": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "trading",
+      "id": "1"
+    },
+    {
+      "name": "mcp",
+      "id": "2"
+    },
+    {
+      "name": "risk-management",
+      "id": "3"
+    }
+  ],
+  "meta": {
+    "instanceId": "trading-instance"
+  }
+}

@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n-trading
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=changeme
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=UTC
+      - N8N_LOG_LEVEL=info
+      # MCP specific settings
+      - N8N_MCP_ENABLED=true
+      - N8N_MCP_SERVER_PORT=3000
+    volumes:
+      - ./data:/home/node/.n8n
+      - ./workflows:/home/node/.n8n/workflows
+      - ./mcp-config:/home/node/.n8n/mcp
+    networks:
+      - n8n-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: n8n-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=n8n
+      - POSTGRES_PASSWORD=n8n_password
+      - POSTGRES_DB=n8n
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - n8n-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U n8n']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  n8n-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
