@@ -555,11 +555,12 @@ string LoadAPIKey() {
    FileClose(handle);
    StringTrimLeft(key);
    StringTrimRight(key);
-   if(StringLen(key) < 20 || StringFind(key, "sk-") != 0) {
-      Alert("ERROR: Invalid API key format. Must start with 'sk-' and be 20+ characters.");
+   // Validation disabled for local relay mode
+   if(StringLen(key) == 0) {
+      Alert("ERROR: API key file is empty");
       return "";
    }
-   Print("API key loaded successfully");
+   Print("API key loaded successfully (relay mode)");
    return key;
 }
 
