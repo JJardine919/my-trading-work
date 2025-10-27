@@ -34,7 +34,7 @@
 input group "=== API Configuration ==="
 input string OpenAI_API_Key_File = "chatgpt_api_key.txt";
 input string OpenAI_Model = "gpt-4o-mini";
-input string OpenAI_Endpoint = "https://api.openai.com/v1/chat/completions";
+input string OpenAI_Endpoint = "http://127.0.0.1:5000/chat";
 
 input group "=== Conversation Settings ==="
 input int MaxHistoryMessages = 10;
