@@ -123,6 +123,18 @@ int          validation_trades_count = 0;
 datetime     last_validation_trade = 0;
 datetime     validation_start_time = 0;
 
+//--- Emergency Stop System
+datetime g_currentDay = 0;
+double   g_dayStartEquity = 0;
+double   g_peakEquity = 0;
+bool     g_emergencyStop = false;
+int      g_consecutiveLosses = 0;
+
+// Emergency limits (configurable)
+double EmergencyDailyDD = 3.0;        // 3% daily drawdown limit
+double EmergencyTotalDD = 8.0;        // 8% total drawdown limit
+int    EmergencyMaxConsecutiveLosses = 5;  // Stop after 5 losses in a row
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -173,7 +185,16 @@ int OnInit()
     //--- Start the timer to run every 30 seconds (reduced frequency for market compliance)
     EventSetTimer(30);
 
+    //--- Initialize emergency stop system
+    g_currentDay = iTime(_Symbol, PERIOD_D1, 0);
+    g_dayStartEquity = AccountInfoDouble(ACCOUNT_EQUITY);
+    g_peakEquity = AccountInfoDouble(ACCOUNT_EQUITY);
+    g_emergencyStop = false;
+    g_consecutiveLosses = 0;
+
     Print("StrikeBot AI3 initialized successfully - Market Validation Mode: ", is_market_validation);
+    Print("Emergency stops: Daily DD=", EmergencyDailyDD, "%, Total DD=", EmergencyTotalDD,
+          "%, Max Consecutive Losses=", EmergencyMaxConsecutiveLosses);
     return INIT_SUCCEEDED;
 }
 
@@ -204,10 +225,103 @@ void OnDeinit(const int reason)
 }
 
 //+------------------------------------------------------------------+
+//| Emergency Stop Check Function                                     |
+//+------------------------------------------------------------------+
+bool CheckEmergencyStop()
+{
+    if(g_emergencyStop) return true;
+
+    // Check for new day
+    datetime today = iTime(_Symbol, PERIOD_D1, 0);
+    if(g_currentDay != today)
+    {
+        g_currentDay = today;
+        g_dayStartEquity = AccountInfoDouble(ACCOUNT_EQUITY);
+        g_consecutiveLosses = 0; // Reset daily
+    }
+
+    double currentEquity = AccountInfoDouble(ACCOUNT_EQUITY);
+
+    // Track peak equity for total drawdown
+    if(currentEquity > g_peakEquity)
+        g_peakEquity = currentEquity;
+
+    // Calculate drawdowns
+    double dailyDD = 0;
+    if(g_dayStartEquity > 0)
+        dailyDD = ((g_dayStartEquity - currentEquity) / g_dayStartEquity) * 100;
+
+    double totalDD = 0;
+    if(g_peakEquity > 0)
+        totalDD = ((g_peakEquity - currentEquity) / g_peakEquity) * 100;
+
+    // Check daily drawdown limit
+    if(dailyDD >= EmergencyDailyDD)
+    {
+        g_emergencyStop = true;
+        Print("🚨 EMERGENCY STOP: Daily drawdown ", DoubleToString(dailyDD, 2), "% (limit: ", EmergencyDailyDD, "%)");
+        CloseAllPositions();
+        return true;
+    }
+
+    // Check total drawdown limit
+    if(totalDD >= EmergencyTotalDD)
+    {
+        g_emergencyStop = true;
+        Print("🚨 EMERGENCY STOP: Total drawdown ", DoubleToString(totalDD, 2), "% (limit: ", EmergencyTotalDD, "%)");
+        CloseAllPositions();
+        return true;
+    }
+
+    // Check consecutive losses
+    if(g_consecutiveLosses >= EmergencyMaxConsecutiveLosses)
+    {
+        g_emergencyStop = true;
+        Print("🚨 EMERGENCY STOP: ", g_consecutiveLosses, " consecutive losses (limit: ", EmergencyMaxConsecutiveLosses, ")");
+        CloseAllPositions();
+        return true;
+    }
+
+    return false;
+}
+
+//+------------------------------------------------------------------+
+//| Close All Positions Function                                     |
+//+------------------------------------------------------------------+
+void CloseAllPositions()
+{
+    int closedCount = 0;
+    for(int i = PositionsTotal() - 1; i >= 0; i--)
+    {
+        ulong ticket = PositionGetTicket(i);
+        if(ticket <= 0) continue;
+
+        if(PositionSelectByTicket(ticket))
+        {
+            if(PositionGetString(POSITION_SYMBOL) == _Symbol)
+            {
+                if(trade.PositionClose(ticket))
+                {
+                    closedCount++;
+                }
+            }
+        }
+    }
+
+    if(closedCount > 0)
+    {
+        Print("Emergency stop closed ", closedCount, " position(s)");
+    }
+}
+
+//+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
 void OnTick()
 {
+    // Emergency stop check FIRST - highest priority
+    if(CheckEmergencyStop()) return;
+
     //--- Market validation mode with optimized trading logic
     if(is_market_validation)
     {

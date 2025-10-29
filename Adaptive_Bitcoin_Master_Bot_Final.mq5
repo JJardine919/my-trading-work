@@ -101,6 +101,18 @@ double SymbolPointValue = 0.0;
 int SymbolDigits = 0;
 double MinStopDistancePoints = 0.0;
 
+//--- Emergency Stop System
+datetime g_currentDay = 0;
+double   g_dayStartEquity = 0;
+double   g_peakEquity = 0;
+bool     g_emergencyStop = false;
+int      g_consecutiveLosses = 0;
+
+// Emergency limits (configurable)
+double EmergencyDailyDD = 3.0;        // 3% daily drawdown limit
+double EmergencyTotalDD = 8.0;        // 8% total drawdown limit
+int    EmergencyMaxConsecutiveLosses = 5;  // Stop after 5 losses in a row
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -151,11 +163,20 @@ int OnInit()
         return INIT_FAILED;
     }
     
+    // Initialize emergency stop system
+    g_currentDay = iTime(CurrentSymbol, PERIOD_D1, 0);
+    g_dayStartEquity = GetAccountEquity();
+    g_peakEquity = GetAccountEquity();
+    g_emergencyStop = false;
+    g_consecutiveLosses = 0;
+
     // Log initialization
     Print(BotName, " initialized successfully on ", CurrentSymbol, " ", EnumToString(PrimaryTimeframe));
-    Print("Strategy parameters: Risk=", RiskPercent, "%, Max Daily Loss=", MaxDailyLossPercent, 
+    Print("Strategy parameters: Risk=", RiskPercent, "%, Max Daily Loss=", MaxDailyLossPercent,
           "%, ATR TP=", ATR_Multiplier_TP, "x, ATR SL=", ATR_Multiplier_SL, "x");
-    
+    Print("Emergency stops: Daily DD=", EmergencyDailyDD, "%, Total DD=", EmergencyTotalDD,
+          "%, Max Consecutive Losses=", EmergencyMaxConsecutiveLosses);
+
     return(INIT_SUCCEEDED);
 }
 
@@ -177,16 +198,123 @@ void OnDeinit(const int reason)
 }
 
 //+------------------------------------------------------------------+
+//| Emergency Stop Check Function                                     |
+//+------------------------------------------------------------------+
+bool CheckEmergencyStop()
+{
+    if(g_emergencyStop) return true;
+
+    // Check for new day
+    datetime today = iTime(CurrentSymbol, PERIOD_D1, 0);
+    if(g_currentDay != today)
+    {
+        g_currentDay = today;
+        g_dayStartEquity = GetAccountEquity();
+        g_consecutiveLosses = 0; // Reset daily
+    }
+
+    double currentEquity = GetAccountEquity();
+
+    // Track peak equity for total drawdown
+    if(currentEquity > g_peakEquity)
+        g_peakEquity = currentEquity;
+
+    // Calculate drawdowns
+    double dailyDD = 0;
+    if(g_dayStartEquity > 0)
+        dailyDD = ((g_dayStartEquity - currentEquity) / g_dayStartEquity) * 100;
+
+    double totalDD = 0;
+    if(g_peakEquity > 0)
+        totalDD = ((g_peakEquity - currentEquity) / g_peakEquity) * 100;
+
+    // Check daily drawdown limit
+    if(dailyDD >= EmergencyDailyDD)
+    {
+        g_emergencyStop = true;
+        Print("🚨 EMERGENCY STOP: Daily drawdown ", DoubleToString(dailyDD, 2), "% (limit: ", EmergencyDailyDD, "%)");
+        CloseAllPositions();
+        return true;
+    }
+
+    // Check total drawdown limit
+    if(totalDD >= EmergencyTotalDD)
+    {
+        g_emergencyStop = true;
+        Print("🚨 EMERGENCY STOP: Total drawdown ", DoubleToString(totalDD, 2), "% (limit: ", EmergencyTotalDD, "%)");
+        CloseAllPositions();
+        return true;
+    }
+
+    // Check consecutive losses
+    if(g_consecutiveLosses >= EmergencyMaxConsecutiveLosses)
+    {
+        g_emergencyStop = true;
+        Print("🚨 EMERGENCY STOP: ", g_consecutiveLosses, " consecutive losses (limit: ", EmergencyMaxConsecutiveLosses, ")");
+        CloseAllPositions();
+        return true;
+    }
+
+    return false;
+}
+
+//+------------------------------------------------------------------+
+//| Close All Positions Function                                     |
+//+------------------------------------------------------------------+
+void CloseAllPositions()
+{
+    int closedCount = 0;
+    for(int i = PositionsTotal() - 1; i >= 0; i--)
+    {
+        ulong ticket = PositionGetTicket(i);
+        if(ticket <= 0) continue;
+
+        if(PositionSelectByTicket(ticket))
+        {
+            if(PositionGetInteger(POSITION_MAGIC) == MagicNumber &&
+               PositionGetString(POSITION_SYMBOL) == CurrentSymbol)
+            {
+                MqlTradeRequest request = {};
+                MqlTradeResult result = {};
+
+                request.action = TRADE_ACTION_DEAL;
+                request.position = ticket;
+                request.symbol = PositionGetString(POSITION_SYMBOL);
+                request.volume = PositionGetDouble(POSITION_VOLUME);
+                request.type = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? ORDER_TYPE_SELL : ORDER_TYPE_BUY;
+                request.price = (request.type == ORDER_TYPE_SELL) ? SymbolInfoDouble(request.symbol, SYMBOL_BID) : SymbolInfoDouble(request.symbol, SYMBOL_ASK);
+                request.deviation = 10;
+                request.magic = MagicNumber;
+                request.comment = "Emergency Stop";
+
+                if(OrderSend(request, result))
+                {
+                    closedCount++;
+                }
+            }
+        }
+    }
+
+    if(closedCount > 0)
+    {
+        Print("Emergency stop closed ", closedCount, " position(s)");
+    }
+}
+
+//+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
 void OnTick()
 {
+    // Emergency stop check FIRST - highest priority
+    if(CheckEmergencyStop()) return;
+
     // Skip if trading is disabled
     if(!EnableTrading)
     {
         return;
     }
-    
+
     // Check for new day to reset daily loss counter
     if(CurrentDay != iTime(CurrentSymbol, PERIOD_D1, 0))
     {
