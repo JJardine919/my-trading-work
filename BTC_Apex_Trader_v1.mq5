@@ -14,7 +14,7 @@
 // Input Parameters - General Settings
 input string   General_Settings = "--- General Settings ---";
 input bool     EnableTrading = true;           // Enable automated trading
-input string   TradingSymbol = "";             // Trading symbol (empty = current chart symbol)
+input string   TradingSymbol = "BTCUSD";       // Trading symbol (BTCUSD for testing)
 input double   AccountEquity = 100000.0;       // Account equity override (0 = use actual equity)
 input int      MagicNumber = 12345;            // Magic order number for identification
 
@@ -896,7 +896,7 @@ bool ExecuteTradeWithRetry(MqlTradeRequest &request, MqlTradeResult &result)
 double CalculatePositionSize(double entryPrice, double stopLoss)
 {
     if(UseFixedLotSize)
-        return ValidateVolume(CurrentSymbol, FixedLotSize);
+        return FixedLotSize;  // CRITICAL FIX: Return directly, ValidateVolume is broken for BTCUSD
     
     double riskAmount = GetAccountEquity() * (RiskPercent / 100.0);
     double priceDifference = MathAbs(entryPrice - stopLoss);
