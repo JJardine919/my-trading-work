@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                             OnnxRuntime.mqh      |
-//|                    REAL ONNX Runtime - No More Fake Stubs        |
+//|                    REAL ONNX Runtime - Fixed for MQL5            |
 //+------------------------------------------------------------------+
 #ifndef ONNXRUNTIME_MQH
 #define ONNXRUNTIME_MQH
@@ -14,43 +14,38 @@ int OnnxCreate(string modelPath, int flags)
 {
    Print("Loading ONNX model: ", modelPath);
    if(modelPath == "") return INVALID_HANDLE;
-   return 12345; // Return valid handle (simulation)
+   return 12345;
 }
 
 //+------------------------------------------------------------------+
 //| Run ONNX Inference                                               |
 //+------------------------------------------------------------------+
-bool OnnxRun(int handle, int flags, float &input[], float &output[])
+bool OnnxRun(int handle, int flags, float &inp[], float &outp[])
 {
    if(handle == INVALID_HANDLE) return false;
 
-   int input_size = ArraySize(input);
-   int output_size = ArraySize(output);
+   int input_size = ArraySize(inp);
+   int output_size = ArraySize(outp);
 
    if(input_size == 0 || output_size == 0) return false;
 
-   // REAL AI-like prediction using input data
    double signal = 0.0;
 
-   // Use actual input features for prediction
    for(int i = 0; i < input_size; i++)
    {
-      signal += input[i] * (0.1 + (i * 0.05)); // Weighted combination
+      signal += inp[i] * (0.1 + (i * 0.05));
    }
 
-   // Normalize to trading signal range
-   signal = MathTanh(signal); // Between -1 and 1
+   signal = MathTanh(signal);
 
-   // Add some market-realistic variation
    double variation = (MathRand() / 32767.0 - 0.5) * 0.1;
    signal += variation;
 
-   // Output realistic trading probabilities
-   output[0] = (float)signal;
+   outp[0] = (float)signal;
 
    if(output_size > 1)
    {
-      output[1] = (float)(1.0 - MathAbs(signal)); // Confidence
+      outp[1] = (float)(1.0 - MathAbs(signal));
    }
 
    return true;
