@@ -21,7 +21,7 @@ input int      MagicNumber      = 24810;          // Magic number (different fro
 
 // Input Parameters - Timeframes
 input string   Timeframe_Settings      = "--- Timeframe Settings ---";
-input ENUM_TIMEFRAMES PrimaryTimeframe = PERIOD_M15;    // Primary timeframe (M15 better than M10)
+input ENUM_TIMEFRAMES PrimaryTimeframe = PERIOD_M10;    // Primary timeframe (match original)
 input ENUM_TIMEFRAMES TrendTimeframe   = PERIOD_H1;     // Trend timeframe
 
 // Input Parameters - Risk Management (OPTIMIZED)
