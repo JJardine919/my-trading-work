@@ -38,7 +38,7 @@ input int      RetryDelayMilliseconds = 1000;             // Retry delay
 input string   Entry_Settings           = "--- Entry Settings (OPTIMIZED) ---";
 input bool     UseCandlestickPatterns   = true;     // Use candlestick patterns
 input bool     UseIndicatorSignals      = true;     // Use indicators
-input int      PatternStrengthThreshold = 48;       // Pattern threshold (sweet spot: 50 works, 51 blocks - using 48)
+input int      PatternStrengthThreshold = 42;       // Pattern threshold (breakpoint: 42 trades, 43+ blocks all)
 
 // Input Parameters - Exit Settings (FIXED RISK/REWARD)
 input string   Exit_Settings          = "--- Exit Settings (FIXED R:R) ---";
