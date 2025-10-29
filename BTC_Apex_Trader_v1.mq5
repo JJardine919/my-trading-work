@@ -15,7 +15,7 @@
 input string   General_Settings = "--- General Settings ---";
 input bool     EnableTrading = true;           // Enable automated trading
 input string   TradingSymbol = "";             // Trading symbol (empty = current chart symbol)
-input double   AccountEquity = 0.0;            // Account equity override (0 = use actual equity)
+input double   AccountEquity = 100000.0;       // Account equity override (0 = use actual equity)
 input int      MagicNumber = 12345;            // Magic order number for identification
 
 // Input Parameters - Timeframes
