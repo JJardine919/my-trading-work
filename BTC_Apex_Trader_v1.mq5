@@ -755,7 +755,7 @@ bool ExecuteTradeWithRetry(MqlTradeRequest &request, MqlTradeResult &result)
 double CalculatePositionSize(double entryPrice, double stopLoss)
 {
     if(UseFixedLotSize)
-        return ValidateVolume(CurrentSymbol, FixedLotSize);
+        return FixedLotSize;  // FIXED: Return directly, skip broken validation
 
     double riskAmount = GetAccountEquity() * (RiskPercent / 100.0);
     double priceDifference = MathAbs(entryPrice - stopLoss);
