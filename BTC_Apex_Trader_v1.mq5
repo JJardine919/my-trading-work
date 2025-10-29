@@ -29,8 +29,8 @@ input string   Risk_Settings          = "--- Risk Management (OPTIMIZED) ---";
 input double   RiskPercent            = 1.0;              // Risk per trade (reduced from 1.5%)
 input double   MaxDailyLossPercent    = 3.5;              // Max daily loss (tighter than 5%)
 input int      MaxOpenPositions       = 6;                // Max positions (reduced from 20!)
-input bool     UseFixedLotSize        = false;            // Use risk-based sizing (CHANGED)
-input double   FixedLotSize           = 0.5;              // Fixed lot if enabled (reduced)
+input bool     UseFixedLotSize        = true;             // Use fixed lot (match original)
+input double   FixedLotSize           = 0.01;             // Fixed lot size (match original)
 input int      MaxRetryAttempts       = 3;                // Retry attempts
 input int      RetryDelayMilliseconds = 1000;             // Retry delay
 
