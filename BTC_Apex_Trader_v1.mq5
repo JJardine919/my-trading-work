@@ -295,7 +295,8 @@ void CloseAllPositions()
 //+------------------------------------------------------------------+
 void OnTick()
 {
-    if(CheckEmergencyStop()) return;
+    // DISABLED for A/B testing - remove interference
+    // if(CheckEmergencyStop()) return;
     if(!EnableTrading) return;
 
     if(CurrentDay != iTime(CurrentSymbol, PERIOD_D1, 0))
