@@ -43,9 +43,9 @@ input int      PatternStrengthThreshold = 42;  // Pattern threshold (42 is break
 input string   Exit_Settings = "--- Exit Settings ---";
 input double   ATR_Multiplier_TP = 3.0;        // ATR multiplier for Take Profit
 input double   ATR_Multiplier_SL = 2.0;        // ATR multiplier for Stop Loss
-input bool     UseTrailingStop = false;        // Use trailing stop (disabled for market compliance)
+input bool     UseTrailingStop = true;         // Use trailing stop (ENABLED to match your settings)
 input double   TrailingStopActivation = 1.5;   // ATR multiplier to activate trailing stop
-input bool     UsePartialClose = false;        // Use partial position closing (disabled for market compliance)
+input bool     UsePartialClose = true;         // Use partial position closing (ENABLED to match your settings)
 input double   PartialClosePercent = 50.0;     // Percentage to close at first target
 
 // Input Parameters - Indicator Settings
