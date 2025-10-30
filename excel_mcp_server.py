@@ -38,12 +38,18 @@ def read_excel_summary(filepath):
             # Extract key metrics
             if "Total Net Profit" in key and len(row) > 3:
                 results["metrics"]["net_profit"] = row[3]
+            elif "Balance Drawdown Maximal" in key and len(row) > 3:
+                # Format: "21 704.40 (18.81%)"
+                dd_str = str(row[3])
+                if "(" in dd_str:
+                    pct = dd_str.split("(")[1].split(")")[0].strip()
+                    results["metrics"]["balance_drawdown_pct"] = pct
             elif "Equity Drawdown Maximal" in key and len(row) > 3:
                 # Format: "42 144.33 (31.52%)"
                 dd_str = str(row[3])
                 if "(" in dd_str:
-                    pct = dd_str.split("(")[1].split(")")[0]
-                    results["metrics"]["max_drawdown_pct"] = pct
+                    pct = dd_str.split("(")[1].split(")")[0].strip()
+                    results["metrics"]["equity_drawdown_pct"] = pct
             elif "Profit Factor" in key and len(row) > 3:
                 results["metrics"]["profit_factor"] = row[3]
             elif "Total Trades" in key and len(row) > 3:
@@ -53,7 +59,9 @@ def read_excel_summary(filepath):
                 trades_str = str(row[3])
                 results["metrics"]["win_count"] = trades_str.split("(")[0].strip() if "(" in trades_str else trades_str
                 if "(" in trades_str:
-                    results["metrics"]["win_rate_pct"] = trades_str.split("(")[1].split(")")[0]
+                    results["metrics"]["win_rate_pct"] = trades_str.split("(")[1].split(")")[0].strip()
+            elif "Sharpe Ratio" in key and len(row) > 3:
+                results["metrics"]["sharpe_ratio"] = row[3]
 
         wb.close()
         return results
