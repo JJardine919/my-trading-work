@@ -1,0 +1,58 @@
+=============================================================================
+               INSTALL ML BOT - SUPER SIMPLE VERSION
+=============================================================================
+
+OPTION 1: FASTEST WAY
+---------------------
+1. Open MT5
+2. Press Ctrl+R (Strategy Tester opens)
+3. Click "Open Data Folder" at bottom or File → Open Data Folder
+4. Now you see your MT5 folder
+
+5. Open ANOTHER window with your git repo:
+   C:\Users\[YourName]\Documents\my-trading-work
+
+6. Copy these 3 files by dragging them:
+
+   DRAG: Adaptive_Bitcoin_ML_Enhanced.mq5
+   INTO: [MT5 window]\MQL5\Experts\
+
+   DRAG: Include\Random Forest.mqh  
+   INTO: [MT5 window]\MQL5\Include\
+
+   DRAG: Common\Files\BTCUSD.PERIOD_D1.cluster-centroids.onnx
+   INTO: [MT5 window - go UP one folder]\Common\Files\
+
+7. In MT5, press F4
+8. Click Compile
+9. Done!
+
+
+OPTION 2: I'LL HELP YOU
+-----------------------
+Just tell me:
+- Open File Explorer
+- Go to: C:\Users\[YourName]\Documents\my-trading-work
+- What files do you see? (especially .mq5 files)
+- Do you see: Adaptive_Bitcoin_ML_Enhanced.mq5 ?
+
+Then tell me where your MT5 is and I'll give exact copy commands!
+
+
+THE FILES YOU'RE LOOKING FOR:
+-----------------------------
+✓ Adaptive_Bitcoin_ML_Enhanced.mq5  (52KB - the bot)
+✓ Random Forest.mqh (in Include folder)
+✓ BTCUSD.PERIOD_D1.cluster-centroids.onnx (in Common\Files folder)
+
+All should be in: C:\Users\[YourName]\Documents\my-trading-work\
+
+
+IF YOU DON'T SEE THEM:
+----------------------
+You might be in the wrong folder. Your files are in the git repo at:
+C:\Users\jimjj\Documents\my-trading-work\
+
+(Replace jimjj with your Windows username)
+
+=============================================================================

@@ -1,0 +1,93 @@
+===============================================================================
+                    HOW TO INSTALL THE ML BOT IN MT5
+===============================================================================
+
+STEP 1: Open MT5 and find your data folder
+-------------------------------------------
+1. Open MetaTrader 5
+2. Click: File → Open Data Folder
+3. A folder will open (something like C:\Users\...\MetaQuotes\Terminal\...)
+4. Keep this window open
+
+
+STEP 2: Copy these 3 files
+-------------------------------------------
+
+FILE 1: The Bot
+---------------
+From your git repo:
+  my-trading-work\Adaptive_Bitcoin_ML_Enhanced.mq5
+
+To MT5:
+  [YourMT5Folder]\MQL5\Experts\Adaptive_Bitcoin_ML_Enhanced.mq5
+
+Just drag and drop into the Experts folder!
+
+
+FILE 2: The Include File
+------------------------
+From your git repo:
+  my-trading-work\Include\Random Forest.mqh
+
+To MT5:
+  [YourMT5Folder]\MQL5\Include\Random Forest.mqh
+
+Drag into the Include folder!
+
+
+FILE 3: The AI Model
+--------------------
+From your git repo:
+  my-trading-work\Common\Files\BTCUSD.PERIOD_D1.cluster-centroids.onnx
+
+To MT5:
+  Go UP one folder (back to Terminal folder)
+  Then into: Common\Files\BTCUSD.PERIOD_D1.cluster-centroids.onnx
+
+Drag into Common\Files\
+
+
+STEP 3: Compile in MT5
+-------------------------------------------
+1. In MT5, press F4 (opens MetaEditor)
+2. On the left side, expand "Experts"
+3. Double-click "Adaptive_Bitcoin_ML_Enhanced"
+4. Click the Compile button (or press F7)
+5. Should say "0 errors"
+
+
+STEP 4: Find it in Strategy Tester
+-------------------------------------------
+1. In MT5, press Ctrl+R (opens Strategy Tester)
+2. In "Expert Advisor" dropdown, look for: Adaptive_Bitcoin_ML_Enhanced
+3. If you see it = SUCCESS! Ready to test!
+
+
+===============================================================================
+                          VISUAL GUIDE
+===============================================================================
+
+Your git repo folder structure:
+my-trading-work\
+├── Adaptive_Bitcoin_ML_Enhanced.mq5          ← Copy this to MT5\Experts
+├── Include\
+│   └── Random Forest.mqh                      ← Copy this to MT5\Include
+└── Common\
+    └── Files\
+        └── BTCUSD.PERIOD_D1.cluster-centroids.onnx  ← Copy to Common\Files
+
+Your MT5 folder structure (after File → Open Data Folder):
+Terminal\D0E8209F77C8CF37AD8BF550E51FF075\    ← (random folder name)
+├── MQL5\
+│   ├── Experts\        ← Put .mq5 here
+│   └── Include\        ← Put .mqh here
+└── (go UP one folder, then)
+    Common\
+    └── Files\          ← Put .onnx here
+
+
+===============================================================================
+STILL STUCK? Tell me:
+- Where is your MT5 installed? (or paste the path from File → Open Data Folder)
+- What do you see in your my-trading-work folder?
+===============================================================================
