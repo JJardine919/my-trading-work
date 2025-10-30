@@ -25,25 +25,25 @@ input ENUM_TIMEFRAMES TrendTimeframe = PERIOD_H1;     // Timeframe for trend det
 
 // Input Parameters - Risk Management
 input string   Risk_Settings = "--- Risk Management Settings ---";
-input double   RiskPercent = 0.5;              // Risk percentage per trade (of equity)
-input double   MaxDailyLossPercent = 2.0;      // Maximum daily loss percentage
-input int      MaxOpenPositions = 1;           // Maximum number of open positions
+input double   RiskPercent = 1.5;              // Risk percentage per trade (of equity)
+input double   MaxDailyLossPercent = 5.0;      // Maximum daily loss percentage
+input int      MaxOpenPositions = 20;          // Maximum number of open positions
 input bool     UseFixedLotSize = true;         // Use fixed lot size instead of risk-based
-input double   FixedLotSize = 0.01;            // Fixed lot size if enabled
-input int      MaxRetryAttempts = 5;           // Maximum retry attempts for trade operations
+input double   FixedLotSize = 1.4;             // Fixed lot size if enabled
+input int      MaxRetryAttempts = 2;           // Maximum retry attempts for trade operations
 input int      RetryDelayMilliseconds = 1000;  // Delay between retry attempts (milliseconds)
 
 // Input Parameters - Entry Settings
 input string   Entry_Settings = "--- Entry Settings ---";
 input bool     UseCandlestickPatterns = true;  // Use candlestick patterns for entry
 input bool     UseIndicatorSignals = true;     // Use indicator signals for entry
-input int      PatternStrengthThreshold = 60;  // Pattern strength threshold (0-100)
+input int      PatternStrengthThreshold = 42;  // Pattern strength threshold (0-100)
 input bool     BuyAndSellTrades = true;              // Both buy and sell trades
 
 // Input Parameters - Exit Settings
 input string   Exit_Settings = "--- Exit Settings ---";
-input double   ATR_Multiplier_TP = 3.0;        // ATR multiplier for Take Profit
-input double   ATR_Multiplier_SL = 2.0;        // ATR multiplier for Stop Loss
+input double   ATR_Multiplier_TP = 19.0;       // ATR multiplier for Take Profit
+input double   ATR_Multiplier_SL = 14.0;       // ATR multiplier for Stop Loss
 input bool     UseTrailingStop = false;        // Use trailing stop (disabled for market compliance)
 input double   TrailingStopActivation = 1.5;   // ATR multiplier to activate trailing stop
 input bool     UsePartialClose = false;        // Use partial position closing (disabled for market compliance)
@@ -51,7 +51,7 @@ input double   PartialClosePercent = 50.0;     // Percentage to close at first t
 
 // Input Parameters - Indicator Settings
 input string   RSI_Settings = "--- RSI Settings ---";
-input int      RSI_Period = 14;                // RSI period
+input int      RSI_Period = 12;                // RSI period
 input double   RSI_UpperLevel = 70.0;          // RSI upper level
 input double   RSI_LowerLevel = 30.0;          // RSI lower level
 input double   RSI_MiddleLevel = 50.0;         // RSI middle level
@@ -61,7 +61,7 @@ input int      Stoch_K_Period = 5;             // Stochastic %K period
 input int      Stoch_D_Period = 3;             // Stochastic %D period
 input int      Stoch_Slowing = 3;              // Stochastic slowing
 input double   Stoch_UpperLevel = 80.0;        // Stochastic upper level
-input double   Stoch_LowerLevel = 20.0;        // Stochastic lower level
+input double   Stoch_LowerLevel = 10.0;        // Stochastic lower level
 
 input string   CCI_Settings = "--- CCI Settings ---";
 input int      CCI_Period = 14;                // CCI period
@@ -74,7 +74,7 @@ input double   MFI_UpperLevel = 80.0;          // MFI upper level
 input double   MFI_LowerLevel = 20.0;          // MFI lower level
 
 input string   MA_Settings = "--- Moving Average Settings ---";
-input int      Fast_EMA_Period = 12;           // Fast EMA period
+input int      Fast_EMA_Period = 11;           // Fast EMA period
 input int      Slow_EMA_Period = 26;           // Slow EMA period
 
 input string   ATR_Settings = "--- ATR Settings ---";
