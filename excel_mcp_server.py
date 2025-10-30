@@ -113,7 +113,8 @@ def organize_files(directory):
 
 def main():
     """MCP Server main loop"""
-    working_dir = "C:\\Users\\jimjj\\Documents\\my-trading-work"
+    # Use current directory or first argument
+    working_dir = os.getcwd() if len(sys.argv) < 2 or sys.argv[1] in ['list', 'organize', 'read', 'analyze-all'] else sys.argv[1]
 
     if len(sys.argv) > 1:
         command = sys.argv[1]
