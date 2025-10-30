@@ -1,0 +1,4 @@
+openai_key.txt
+anthropic_key.txt
+*.pyc
+__pycache__/
