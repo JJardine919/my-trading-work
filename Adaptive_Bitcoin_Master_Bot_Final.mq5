@@ -415,7 +415,7 @@ void CheckForTradeSignals()
     int trend = DetermineMarketTrend();
     
     // Log current indicator values
-    if(!IsTestingMode) LogIndicatorValues();
+    // if(!IsTestingMode) LogIndicatorValues();  // DISABLED - prevents 80+ seconds of log spam
     
     // Check for buy signal
     if(IsBuySignal(trend))
