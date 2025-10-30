@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\jimjj\\Documents\\my-trading-work"
+      ]
+    },
+    "excel-reader": {
+      "command": "python",
+      "args": [
+        "C:\\Users\\jimjj\\Documents\\my-trading-work\\excel_mcp_server.py"
+      ]
+    }
+  }
+}
