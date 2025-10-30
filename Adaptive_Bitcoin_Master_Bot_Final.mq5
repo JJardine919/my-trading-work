@@ -38,6 +38,7 @@ input string   Entry_Settings = "--- Entry Settings ---";
 input bool     UseCandlestickPatterns = true;  // Use candlestick patterns for entry
 input bool     UseIndicatorSignals = true;     // Use indicator signals for entry
 input int      PatternStrengthThreshold = 60;  // Pattern strength threshold (0-100)
+input bool     BuyAndSellTrades = true;              // Both buy and sell trades
 
 // Input Parameters - Exit Settings
 input string   Exit_Settings = "--- Exit Settings ---";
