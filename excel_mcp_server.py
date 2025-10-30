@@ -28,40 +28,45 @@ def read_excel_summary(filepath):
         }
 
         # MT5 backtest files have metrics in specific rows
-        # Scan for key metrics
+        # Scan for key metrics - check all columns
         for row in sheet.iter_rows(min_row=1, max_row=100, values_only=True):
-            if not row or not row[0]:
+            if not row:
                 continue
 
-            key = str(row[0]).strip()
+            # Check column 0
+            if row[0]:
+                key = str(row[0]).strip()
+                if "Total Net Profit" in key and len(row) > 3:
+                    results["metrics"]["net_profit"] = row[3]
+                elif "Profit Factor" in key and len(row) > 3:
+                    results["metrics"]["profit_factor"] = row[3]
+                elif "Total Trades" in key and len(row) > 3:
+                    results["metrics"]["total_trades"] = row[3]
+                elif "Profit Trades" in key and "% of total" in key and len(row) > 3:
+                    trades_str = str(row[3])
+                    results["metrics"]["win_count"] = trades_str.split("(")[0].strip() if "(" in trades_str else trades_str
+                    if "(" in trades_str:
+                        results["metrics"]["win_rate_pct"] = trades_str.split("(")[1].split(")")[0].strip()
+                elif "Sharpe Ratio" in key and len(row) > 3:
+                    results["metrics"]["sharpe_ratio"] = row[3]
 
-            # Extract key metrics
-            if "Total Net Profit" in key and len(row) > 3:
-                results["metrics"]["net_profit"] = row[3]
-            elif "Balance Drawdown Maximal" in key and len(row) > 3:
-                # Format: "21 704.40 (18.81%)"
-                dd_str = str(row[3])
-                if "(" in dd_str:
-                    pct = dd_str.split("(")[1].split(")")[0].strip()
-                    results["metrics"]["balance_drawdown_pct"] = pct
-            elif "Equity Drawdown Maximal" in key and len(row) > 3:
-                # Format: "42 144.33 (31.52%)"
-                dd_str = str(row[3])
-                if "(" in dd_str:
-                    pct = dd_str.split("(")[1].split(")")[0].strip()
-                    results["metrics"]["equity_drawdown_pct"] = pct
-            elif "Profit Factor" in key and len(row) > 3:
-                results["metrics"]["profit_factor"] = row[3]
-            elif "Total Trades" in key and len(row) > 3:
-                results["metrics"]["total_trades"] = row[3]
-            elif "Profit Trades" in key and "% of total" in key and len(row) > 3:
-                # Format: "20 (28.17%)"
-                trades_str = str(row[3])
-                results["metrics"]["win_count"] = trades_str.split("(")[0].strip() if "(" in trades_str else trades_str
-                if "(" in trades_str:
-                    results["metrics"]["win_rate_pct"] = trades_str.split("(")[1].split(")")[0].strip()
-            elif "Sharpe Ratio" in key and len(row) > 3:
-                results["metrics"]["sharpe_ratio"] = row[3]
+            # Check column 4 for Balance Drawdown
+            if len(row) > 7 and row[4]:
+                key = str(row[4]).strip()
+                if "Balance Drawdown Maximal" in key:
+                    dd_str = str(row[7]) if row[7] else ""
+                    if "(" in dd_str and "%" in dd_str:
+                        pct = dd_str.split("(")[1].split(")")[0].replace("%", "").strip()
+                        results["metrics"]["balance_drawdown_pct"] = pct
+
+            # Check column 8 for Equity Drawdown
+            if len(row) > 11 and row[8]:
+                key = str(row[8]).strip()
+                if "Equity Drawdown Maximal" in key:
+                    dd_str = str(row[11]) if row[11] else ""
+                    if "(" in dd_str and "%" in dd_str:
+                        pct = dd_str.split("(")[1].split(")")[0].replace("%", "").strip()
+                        results["metrics"]["equity_drawdown_pct"] = pct
 
         wb.close()
         return results
