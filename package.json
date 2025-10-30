@@ -1,0 +1,19 @@
+{
+  "name": "my-trading-work",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:16410/git/JJardine919/my-trading-work"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

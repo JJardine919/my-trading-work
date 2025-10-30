@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "n8n-trading": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sse"],
+      "env": {
+        "SSE_ENDPOINT": "http://localhost:5678/webhook/mcp-server-YOUR-WEBHOOK-ID",
+        "BEARER_TOKEN": "your-bearer-token-here"
+      }
+    }
+  }
+}

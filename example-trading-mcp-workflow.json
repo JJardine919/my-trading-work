@@ -1,0 +1,93 @@
+{
+  "name": "Trading MCP Server Example",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "tools": {
+          "tools": [
+            {
+              "name": "get_market_price",
+              "description": "Get current market price for a trading symbol",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "symbol": {
+                    "type": "string",
+                    "description": "Trading symbol (e.g., BTCUSD, EURUSD)"
+                  }
+                },
+                "required": ["symbol"]
+              }
+            }
+          ]
+        }
+      },
+      "name": "MCP Server Trigger",
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.example.com/price",
+        "options": {
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "symbol",
+                "value": "={{ $json.symbol }}"
+              }
+            ]
+          }
+        }
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format the response for MCP\nconst symbol = $input.first().json.symbol;\nconst price = $input.first().json.price || 'N/A';\n\nreturn {\n  success: true,\n  symbol: symbol,\n  price: price,\n  timestamp: new Date().toISOString(),\n  message: `Current price for ${symbol}: ${price}`\n};"
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "MCP Server Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1",
+  "id": "example-trading-mcp",
+  "meta": {
+    "instanceId": "local"
+  },
+  "tags": []
+}
